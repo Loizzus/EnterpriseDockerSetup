@@ -38,4 +38,18 @@ sudo tee -a /etc/fstab
 $ umount -f -l /mnt/Media.
 ```
 
-Then you can find my Docker Run code here (I need to convert this to Docker Compose but haven't gotten around to it yet). 
+Then you can find my Docker Run code here (I need to convert this to Docker Compose but haven't gotten around to it yet): [/Docker/containers/plex/](https://github.com/Loizzus/EnterpriseDockerSetup/blob/main/Docker/containers/plex/dockerRunScript.txt)
+
+The only problem that I had after setting this up was that on boot the containers would start up before the NFS drive was mounted causing all the containers to error out. To fix this I told the docker service to only start after the NFS service had started by adding this configuration to the end of the docker service config file here: /etc/conf.d/docker
+```
+# Command added by user to make docker only start after network drive has been mounted
+rc_need="nfsmount"
+```
+
+### GitLab
+GitLab is easy enough to setup, infact its' documentation is the best I've ever seen on a Docker container. To backup Gitlab you have to run a command inside the container itself which creates a backup file for you. However they do skimp on a couple of important files (for security reasons which I have chosen to ignore). Anyway I created a batch script in /Docker/containers/gitlab that you can automatically execute using "crontab -e". 
+
+### MsSQL - Microsoft SQL
+In /Docker/containers/mssql you can find the script that must be run as a cronjob on the host OS. It also runs the command within the MsSQL container to create the backup then the script copies it to the backup destination (hopefully your NAS). 
+
+###
