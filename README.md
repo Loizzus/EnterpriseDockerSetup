@@ -13,6 +13,9 @@ If you use a Volume managed by Docker it is not easy to change the files within 
 ## My solution
 The reality is that when it comes to managing and backing up data for each container it really depends on the container. I will list the containers I use and how I set them up. 
 
+### Portainer
+If you don't know portainer you should use it, it is a super handy tool for checking up on your containers. [Instructions here.](https://docs.portainer.io/v/ce-2.9/start/install/server/docker/linux)
+
 ### Plex, Sonarr and Jackett
 I use Plex as my media center, and Sonarr and Jacket for making sure I always have the latest episode for each of my TV shows. This media data is relatively unimportant to me. I don't care about backing it up, however I do have a lot of it so it is only practical to store it on my NAS. Also my NAS has drive redundancy which is enough peace of mind for me. If my house burns downs I'll have bigger problems and can probably shell out for a Netflix subscription while I'm living in a hotel. 
 
@@ -52,4 +55,31 @@ GitLab is easy enough to setup, infact its' documentation is the best I've ever 
 ### MsSQL - Microsoft SQL
 In /Docker/containers/mssql you can find the script that must be run as a cronjob on the host OS. It also runs the command within the MsSQL container to create the backup then the script copies it to the backup destination (hopefully your NAS). 
 
-###
+### MySQL
+For this script I opted to use the MySQL dump utility which I felt was more versatile. It allows me to run the script from the NAS and remotely connect to the MySQL server to dump the databases. 
+
+### Ouroboros - Updates other containers to latest version
+```
+docker run -d --name ouroboros \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e LATEST=false \
+  -e SELF_UPDATE=true \
+  -e MONITOR="gitlab portainer sqlserver mysql knowledge docker_web_1 nodejs-internal" \
+  -e CLEANUP=true \
+  --restart unless-stopped \
+  pyouroboros/ouroboros
+```
+
+### Knowledge Base
+```
+docker pull koda/docker-knowledge
+mkdir /var/lib/knowledge
+chmod a+w /var/lib/knowledge
+
+docker run -d \
+-p 8085:8080 \
+-v /var/lib/knowledge:/root/.knowledge \
+--restart unless-stopped \
+--name knowledge \
+koda/docker-knowledge
+```
