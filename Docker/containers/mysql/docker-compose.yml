@@ -1,0 +1,19 @@
+version: '3'
+      
+services:
+    mysql:
+        container_name: mysql
+        image: mysql:latest
+        expose:
+          - "3306"
+          - "33060"
+        ports:
+          - "3306:3306"
+          - "33060:33060"
+        volumes:
+          - /var/lib/mysql/config:/etc/mysql/conf.d
+          - /var/lib/mysql/data:/var/lib/mysql
+        environment:
+          - MYSQL_ROOT_PASSWORD=passwordHere
+          - TZ=Pacific/Auckland
+        restart: unless-stopped

@@ -1,0 +1,17 @@
+version: '3'
+      
+services:
+    gitlab:
+        container_name: gitlab
+        image: 'gitlab/gitlab-ee:latest'
+        restart: unless-stopped
+        hostname: 'git.domain.nz'
+        ports:
+            - '8081:80'
+            - '4543:443'
+            - '2289:22'
+        volumes:
+            - '/var/lib/gitlab/config:/etc/gitlab'
+            - '/var/lib/gitlab/logs:/var/log/gitlab'
+            - '/var/lib/gitlab/data:/var/opt/gitlab'
+            - '/mnt/Media/Docker/containers/GitLab/backups:/home'

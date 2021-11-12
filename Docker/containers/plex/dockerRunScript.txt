@@ -1,0 +1,61 @@
+docker run \
+-d \
+--name plex \
+-p 32400:32400/tcp \
+-p 3005:3005/tcp \
+-p 8324:8324/tcp \
+-p 32469:32469/tcp \
+-p 1900:1900/udp \
+-p 32410:32410/udp \
+-p 32412:32412/udp \
+-p 32413:32413/udp \
+-p 32414:32414/udp \
+-e TZ="Pacific/Auckland" \
+-e PLEX_CLAIM="claim-99999999_p_999999" \
+-e ADVERTISE_IP="http://192.168.1.10:32400/" \
+-e PLEX_UID=1000 \
+-e PLEX_GID=1000 \
+-h PlexServer \
+-v /var/lib/plex/config:/config \
+-v /var/tmp/plex/transcode:/transcode \
+-v /mnt/drive/Downloads:/data \
+--device=/dev/dri:/dev/dri \
+--restart unless-stopped \
+plexinc/pms-docker
+
+
+-------------------------------------------------------------------------------------
+
+
+docker create \
+  --name=jackett \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Pacific/Auckland \
+  -p 9117:9117 \
+  -v /var/lib/jackett/config:/config \
+  -v /var/tmp/downloads:/downloads \
+  --restart unless-stopped \
+  linuxserver/jackett
+  
+
+-------------------------------------------------------------------------------------
+  
+  
+docker create \
+  --name=sonarr \
+  -e PUID=0 \
+  -e PGID=0 \
+  -e TZ=Pacific/Auckland \
+  -e UMASK_SET=022 `#optional` \
+  -p 8989:8989 \
+  -v /var/lib/sonarr/config:/config \
+  -v /mnt/drive/Downloads/TV:/tv \
+  -v /mnt/drive/Downloads/TV:/downloads \
+  -v /mnt/drive/Downloads:/volume1/Downloads \
+  --restart unless-stopped \
+  linuxserver/sonarr
+  
+
+-------------------------------------------------------------------------------------
+

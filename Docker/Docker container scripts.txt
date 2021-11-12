@@ -1,0 +1,76 @@
+10.16.46.45 alpine1 docker
+
+--NFS
+https://kb.synology.com/en-us/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS
+https://www.hiroom2.com/2017/08/22/alpinelinux-3-6-nfs-utils-client-en/
+
+1. Install nfs-utils package
+$ sudo apk add nfs-utils
+$ sudo rc-update add nfsmount
+$ sudo rc-service nfsmount start
+
+2.Mount NFS with mount.nfs
+$ NFS_SERVER=drive.obrien-group.co.nz
+$ NFS_DIR=/volume2/CompanyDrive
+$ sudo mount -t nfs ${NFS_SERVER}:${NFS_DIR} /mnt/drive
+
+3.Mount NFS on boot
+$ echo "${NFS_SERVER}:${NFS_DIR} /mnt/drive nfs _netdev 0 0" | \
+sudo tee -a /etc/fstab
+
+4.If needed unmount
+$ umount -f -l /mnt/drive.
+
+
+-------------------------------------------------------------------------------------
+
+
+--Make sure docker doesn't start until after the NFS mount is mounted. Add the following lines to /etc/conf.d/docker
+# Command added by Loic to make docker only start after network drive has been mounted
+rc_need="nfsmount"
+
+
+-------------------------------------------------------------------------------------
+
+
+SQL Server
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=waterBench78' \
+   -e 'MSSQL_AGENT_ENABLED=true' \
+   -p 1433:1433 --name sqlserver \
+   -h mssql \
+   -v /var/lib/mssql:/var/opt/mssql \
+   --restart unless-stopped \
+   -d mcr.microsoft.com/mssql/server:2019-latest
+  
+
+-------------------------------------------------------------------------------------
+
+  
+Ouroboros - Updates other containers to latest
+docker run -d --name ouroboros \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e LATEST=false \
+  -e SELF_UPDATE=true \
+  -e MONITOR="gitlab portainer sqlserver mysql knowledge docker_web_1 nodejs-internal" \
+  -e CLEANUP=true \
+  --restart unless-stopped \
+  pyouroboros/ouroboros
+  
+
+-------------------------------------------------------------------------------------
+
+
+docker pull koda/docker-knowledge
+mkdir /var/lib/knowledge
+chmod a+w /var/lib/knowledge
+
+docker run -d \
+-p 8085:8080 \
+-v /var/lib/knowledge:/root/.knowledge \
+--restart unless-stopped \
+--name knowledge \
+koda/docker-knowledge
+
+
+-------------------------------------------------------------------------------------
+

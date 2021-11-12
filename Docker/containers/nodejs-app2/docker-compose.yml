@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+    internal:
+        container_name: nodejs_dispatch
+        image: nodejs-app:latest
+        user: "node"
+        working_dir: /home/node/app
+        environment:
+          - NODE_ENV=production
+        volumes:
+          - /var/lib/nodejs-internal/app:/home/node/app
+        expose:
+          - "8888"
+        command: "npm start"
+        restart: always
+        ports:
+          - 8890:8888
