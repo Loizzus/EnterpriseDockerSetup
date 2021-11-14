@@ -50,13 +50,13 @@ rc_need="nfsmount"
 ```
 
 ### GitLab
-GitLab is easy enough to setup, in fact its' documentation is the best I've ever seen for a Docker container. To backup Gitlab you have to run a command inside the container itself which creates a backup file for you. However, they do skimp on a couple of important files (for security reasons which I have chosen to ignore). Anyway, I created a batch script in /Docker/containers/gitlab that you can automatically execute using "crontab -e" that automates the process and copies everything to your mounted drive. 
+GitLab is easy enough to setup, in fact its documentation is the best I've ever seen for a Docker container. To backup Gitlab you have to run a command inside the container itself which creates a backup file for you. However, they do skimp on a couple of important files (for security reasons which I have chosen to ignore). Anyway, I created a batch script in [/Docker/containers/gitlab](https://github.com/Loizzus/EnterpriseDockerSetup/tree/main/Docker/containers/gitlab) that you can automatically execute using "crontab -e" that automates the process and copies everything to your mounted drive. 
 
 ### MsSQL - Microsoft SQL
-In /Docker/containers/mssql you can find the script that must be run as a cronjob on the host OS. This script runs a command inside the MsSQL container to create the backup then the script copies the backup from your bind mount to your NAS. 
+In [/Docker/containers/mssql](https://github.com/Loizzus/EnterpriseDockerSetup/tree/main/Docker/containers/mssql) you can find the script that must be run as a cronjob on the host OS. This script runs a command inside the MsSQL container to create the backup then the script copies the backup from your bind mount to your NAS. 
 
 ### MySQL
-For this script (in /Docker/containers/mysql) I opted to use the MySQL dump utility which I felt was more versatile. It allows me to run the script from my Synology NAS and remotely connect to the MySQL server to dump the databases. 
+For this script (in [/Docker/containers/mysql](https://github.com/Loizzus/EnterpriseDockerSetup/tree/main/Docker/containers/mysql)) I opted to use the MySQL dump utility which I felt was more versatile. It allows me to run the script from my Synology NAS and remotely connect to the MySQL server to dump the databases. 
 
 ### Ouroboros - Container updater
 This is just a good tool to have. It updates containers to the latest versions. 
