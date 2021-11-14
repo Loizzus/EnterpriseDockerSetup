@@ -1,23 +1,23 @@
 # Business / Home Docker Setup
-My findings and code for how to setup Docker in a small enterprise environment. Docker container backup and best practice for setup. 
+My findings and code for how to setup Docker in a small enterprise environment. A how to for Docker container backups and best practices for setting up. 
 
 ### Environment
-Most setups typically have a NAS and an application server. I typically use a NAS from Synology and my prefered OS for my host server is Alpine. 
+Most setups typically have a NAS and an application server. In this guide I use a NAS from Synology and my prefered OS for my host server is [Alpine](https://alpinelinux.org/). 
 
 ## The problem with Docker and volumes
-There is a lot of conflicting information on what the proper way to setup Docker is. A lot of the confusion comes from Docker's own documentation, with them saying things like "[Volumes are the best way to persist data in Docker](https://docs.docker.com/storage/)". This has proven to be very misleading in my quest to figure out the right way to set it up. 
+There is a lot of conflicting information on what the proper way to setup Docker is. A lot of the confusion comes from Docker's own documentation, with them saying things like "[Volumes are the best way to persist data in Docker](https://docs.docker.com/storage/)". This has proven to be very misleading in my quest of figuring out the right way to set it up. 
 
-As far as I can tell it doesn't seem like Docker has a cookie cutter solution for backing up your containers. If you try and copy your data out of a Volume Bind Mount you are going to run into permission issues with most containers when you try and copy files from the bound folder to another place. Same issue if you try and create an SMB or NFS mount on your host environment and store the docker files in there. Because the owner of the files will be the user that is used within the container, that user will likely not exist on the Host environment and the NAS. So you won't be able to restore your backup as the user and permissions will have changed on all of those files. 
-If you use Volumes managed by Docker it is not easy to change the files within said Volumes. Volumes are just meant for storing data that the container creates and uses. You are not meant to inteact with this data directly. 
+As far as I can tell it doesn't seem like Docker has a cookie cutter solution for backing up containers. If you try and copy your data out of a Volume Bind Mount you are going to run into permission issues with most containers. Similarily if you try and create an SMB or NFS mount from your NAS and store the docker files in there you will have permission issues. Because the owner of the files will be the user that is used within each container, that user will likely not exist on the host environment or the NAS. So once restore your backups your container won't be able to use the files as the user and permissions will have changed on all of the restored files. 
+If you use volumes managed by Docker it is not easy to change the files within said volumes. Volumes are just meant for storing data that the container creates and uses. You are not meant to inteact with this data directly. 
 
 ## The solution
-The reality is that when it comes to managing and backing up data for each container it really depends on the container. I will list the containers I use and how I set them up. 
+The reality is that when it comes to managing and backing up data for each container the answer is going to change depending on the container. I will list the containers I use and how I set them up. 
 
 ### Portainer
-If you don't know portainer you should probably use it, it is a super handy tool for checking up on your containers. [Installation instructions here.](https://docs.portainer.io/v/ce-2.9/start/install/server/docker/linux)
+If you don't know portainer you should probably use it, it is a super handy tool for checking up on your containers and performing basic tasks for when you can't be bothered remembering the command line options. [Installation instructions here.](https://docs.portainer.io/v/ce-2.9/start/install/server/docker/linux)
 
-### Plex, Sonarr and Jackett
-I use Plex as my media center, and Sonarr and Jacket for making sure I always have the latest episode for each of my TV shows. This media data is relatively unimportant to me. I don't care about backing it up, however I do have a lot of it so it is impractical to store it anywhere but on my NAS. 
+### Plex, Sonarr and Jackett (and Download Station)
+I use Plex as my media center, and Sonarr and Jacket for making sure I always have the latest episodes for each of my TV shows. This media data is relatively unimportant to me. I don't care about backing it up, however I do have a lot of it so it is impractical to store it anywhere but on my NAS. 
 
 These 3 containers therefore need to access the Shared Folder on my Synology NAS. For this I used to use SMB protocol (apk add samba-client) but while the speed was adequate I found this to be too unreliable. I would from time to time have the containers suddenly loose certain permissions over the mount and couldn't delete files anymore, or sometimes write at all. I ended up settling on NFS and it is markedly better for use between Unix systems. As it was clearly designed for Linux it solves all these permission issues. 
 
