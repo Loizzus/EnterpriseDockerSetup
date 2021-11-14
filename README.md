@@ -94,7 +94,7 @@ $ docker-compose up -d
 ```
 
 ### NginX
-This is an important container when using Docker. 
+This is one of the most important containers for using Docker, it is what allows you to have multiple websites hosted on one machine. As I prefer Node.js over PHP I don't use its PHP capabilities, I just have it host static websites and act as an application proxy. A.k.a. it looks at what hostname people were looking for when they got directed to the server and directs the traffic to the appropriate container. I often have over 6 or 7 websites on a single Alpine host with no issues thanks to this. 
 
 ## Backing up your Synology
-After you have backed up all your Docker files to Synology find a good cloud storage provider, set them up in Hyper Backup and configure your backup task to upload everything to the cloud on a regular basis. 
+After you have backed up all your Docker files to Synology find a good cloud storage provider, set them up in Hyper Backup and configure a backup task to upload everything to the cloud on a regular basis. 
