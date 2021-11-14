@@ -19,9 +19,9 @@ If you don't know portainer you should probably use it, it is a super handy tool
 ### Plex, Sonarr and Jackett (and Download Station)
 I use Plex as my media center, and Sonarr and Jacket for making sure I always have the latest episodes for each of my TV shows. This media data is relatively unimportant to me. I don't care about backing it up, however I do have a lot of it so it is impractical to store it anywhere but on my NAS. 
 
-These 3 containers therefore need to access the Shared Folder on my Synology NAS. For this I used to use SMB protocol (apk add samba-client) but while the speed was adequate I found this to be too unreliable. I would from time to time have the containers suddenly loose certain permissions over the mount and couldn't delete files anymore, or sometimes write at all. I ended up settling on NFS and it is markedly better for use between Unix systems. As it was clearly designed for Linux it solves all these permission issues. 
+These 3 containers therefore need to access a Shared Folder on my Synology NAS. For this I used to use the SMB protocol (apk add samba-client) but while the speed was adequate I found it to be too unreliable. I would from time to time have the containers suddenly loose certain permissions over the mount and could no longer delete files, or sometimes write at all. I ended up settling on NFS and it is markedly better for use between Unix systems as it was clearly designed for Linux and solves many of the permission issues. 
 
-To set it up I followed [the instructions from Synology](https://kb.synology.com/en-us/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS) to get the Server side up. Then I followed [these instructions](https://www.hiroom2.com/2017/08/22/alpinelinux-3-6-nfs-utils-client-en/) to mount the drive in Alpine. 
+To set it up I followed [the instructions from Synology](https://kb.synology.com/en-us/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS) for the server side. Then I followed [these instructions](https://www.hiroom2.com/2017/08/22/alpinelinux-3-6-nfs-utils-client-en/) to mount the drive in Alpine. 
 ```
 1. Install nfs-utils package
 $ sudo apk add nfs-utils
@@ -43,22 +43,23 @@ $ umount -f -l /mnt/Media.
 
 Then you can find my Docker Run code here (I need to convert this to Docker Compose but haven't gotten around to it yet): [/Docker/containers/plex/](https://github.com/Loizzus/EnterpriseDockerSetup/blob/main/Docker/containers/plex/dockerRunScript.txt)
 
-The only problem that I had after setting this up was that on boot the containers would start up before the NFS drive was mounted causing all the containers to error out. To fix this I told the docker service to only start after the NFS service had started by adding this configuration to the end of the docker service config file here: /etc/conf.d/docker
+The only problem that I had after setting this up was that on boot the containers would start up before the NFS drive was mounted causing all the containers to error out until I restarted them. To fix this I told the docker service to start after the NFS service by adding this configuration to the end of the docker service config file: /etc/conf.d/docker
 ```
-# Command added by user to make docker only start after network drive has been mounted
+# Command added by admin to make docker start after network drive has been mounted
 rc_need="nfsmount"
 ```
 
 ### GitLab
-GitLab is easy enough to setup, infact its' documentation is the best I've ever seen on a Docker container. To backup Gitlab you have to run a command inside the container itself which creates a backup file for you. However they do skimp on a couple of important files (for security reasons which I have chosen to ignore). Anyway I created a batch script in /Docker/containers/gitlab that you can automatically execute using "crontab -e". 
+GitLab is easy enough to setup, infact its' documentation is the best I've ever seen for a Docker container. To backup Gitlab you have to run a command inside the container itself which creates a backup file for you. However they do skimp on a couple of important files (for security reasons which I have chosen to ignore). Anyway I created a batch script in /Docker/containers/gitlab that you can automatically execute using "crontab -e" that automates the process and copies everything to your mounted drive. 
 
 ### MsSQL - Microsoft SQL
-In /Docker/containers/mssql you can find the script that must be run as a cronjob on the host OS. It also runs the command within the MsSQL container to create the backup then the script copies it to the backup destination (hopefully your NAS). 
+In /Docker/containers/mssql you can find the script that must be run as a cronjob on the host OS. This script runs a command inside the MsSQL container to create the backup then the script copies the backup from your bind mount to your NAS. 
 
 ### MySQL
-For this script I opted to use the MySQL dump utility which I felt was more versatile. It allows me to run the script from the NAS and remotely connect to the MySQL server to dump the databases. 
+For this script (in /Docker/containers/mysql) I opted to use the MySQL dump utility which I felt was more versatile. It allows me to run the script from the my Synology NAS and remotely connect to the MySQL server to dump the databases. 
 
-### Ouroboros - Updates other containers to latest version
+### Ouroboros - Container updater
+This is just a good tool to have. It updates containers to the latest versions. 
 ```
 docker run -d --name ouroboros \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -85,8 +86,15 @@ koda/docker-knowledge
 ```
 
 ### Node.js
-In my case there isn't a lot to backup in node because my data is all stored in a database, I don't have any loose files. If I make changes to my node code I just copy it into the appropriate node folder using WinSCP then command line to the folder to:
+In my case there isn't a lot to backup in node because my data is all stored in a database, I don't have any files that node creates that I want to keep. If I make changes to my node code I just copy them it into the bind mount folder using WinSCP then use command line to:
 ```
+$ cd /var/lib/nodejs
 $ docker-compose down
 $ docker-compose up -d
 ```
+
+### NginX
+This is an important container when using Docker. 
+
+## Backing up your Synology
+After you have backed up all your Docker files to Synology find a good cloud storage provider, set them up in Hyper Backup and configure your backup task to upload everything to the cloud on a regular basis. 
