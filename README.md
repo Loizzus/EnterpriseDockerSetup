@@ -7,19 +7,19 @@ Most setups typically have a NAS and an application server. In this guide I use 
 ## The problem with Docker and volumes
 There is a lot of conflicting information on what the proper way to setup Docker is. A lot of the confusion comes from Docker's own documentation, with them saying things like "[Volumes are the best way to persist data in Docker](https://docs.docker.com/storage/)". This has proven to be very misleading in my quest of figuring out the right way to set it up. 
 
-As far as I can tell it doesn't seem like Docker has a cookie cutter solution for backing up containers. If you try and copy your data out of a Volume Bind Mount you are going to run into permission issues with most containers. Similarly, if you try and create an SMB or NFS mount from your NAS and store the docker files in there you will have permission issues. Because the owner of the files will be the user that is used within each container, that user will likely not exist on the host environment or the NAS. So once you restore your backups your container won't be able to use the files as the user and permissions will have changed on all of the restored files. 
+As far as I can tell it doesn't seem like Docker has a cookie cutter solution for backing up containers. If you try and copy your data out of a Volume Bind Mount you are going to run into permission issues with most containers. Similarly, if you try and create an SMB or NFS mount from your NAS and store the docker files in there you will run into permission issues (because the owner of the files needs to be the user that is used within each container, that user will likely not exist on the host environment or your NAS). Once you restore your backups your container won't be able to use the files as the user and permissions will have changed on all of the restored files. 
 If you use volumes managed by Docker it is not easy to change the files within said volumes. Volumes are just meant for storing data that the container creates and uses. You are not meant to interact with this data directly. 
 
 ## The solution
-The reality is that when it comes to managing and backing up data for each container the answer is going to change depending on the container. I will list the containers I use and how I set them up. 
+The reality is that when it comes to managing and backing up data for each container the answer is going to change depending on the container. I will list some of the containers I use and how I set them up. 
 
 ### Portainer
-If you don't know Portainer, you should probably use it, it is a super handy tool for checking up on your containers and performing basic tasks for when you can't be bothered remembering the command line options. [Installation instructions here.](https://docs.portainer.io/v/ce-2.9/start/install/server/docker/linux)
+If you don't know Portainer, you should probably use it, it is a super handy tool for checking up on your containers and performing basic tasks for when you can't be bothered remembering the command line options. [Installation instructions here.](https://docs.portainer.io/v/ce-2.9/start/install/server/docker/linux) No backups required. 
 
 ### Plex, Sonarr and Jackett (and Download Station)
 I use Plex as my media centre, and Sonarr and Jacket for making sure I always have the latest episodes for each of my TV shows. This media data is relatively unimportant to me. I don't care about backing it up, however I do have a lot of it so it is impractical to store it anywhere but on my NAS. 
 
-These 3 containers therefore need to access a Shared Folder on my Synology NAS. For this I used to use the SMB protocol (apk add samba-client) but while the speed was adequate, I found it to be too unreliable. I would from time to time have the containers suddenly loose certain permissions over the mount and could no longer delete files, or sometimes write at all. I ended up settling on NFS and it is markedly better for use between Unix systems as it was clearly designed for Linux and solves many of the permission issues. 
+These 3 containers therefore need to access a Shared Folder on my Synology NAS. In the past I used the SMB protocol (apk add samba-client) but while the speed was adequate, I found it to be too unreliable. I would from time to time have the containers suddenly loose certain permissions over the mount and could no longer delete files, or sometimes write at all. I ended up settling on NFS and it is markedly better for use between Unix systems as it was clearly designed for Linux and solves many of the permission issues. 
 
 To set it up I followed [the instructions from Synology](https://kb.synology.com/en-us/DSM/tutorial/How_to_access_files_on_Synology_NAS_within_the_local_network_NFS) for the server side. Then I followed [these instructions](https://www.hiroom2.com/2017/08/22/alpinelinux-3-6-nfs-utils-client-en/) to mount the drive in Alpine. 
 ```
@@ -45,7 +45,7 @@ Then you can find my Docker Run code here (I need to convert this to Docker Comp
 
 The only problem that I had after setting this up was that on boot the containers would start up before the NFS drive was mounted causing all the containers to error out until I restarted them. To fix this I told the docker service to start after the NFS service by adding this configuration to the end of the docker service config file: /etc/conf.d/docker
 ```
-# Command added by admin to make docker start after network drive has been mounted
+# Command added by admin to make Docker start after network drive has been mounted
 rc_need="nfsmount"
 ```
 
